@@ -40,9 +40,34 @@ Version `2.0.0` replaces the legacy `.NET Framework` Visual Basic implementation
 
 ## System Requirements
 
-- Windows 10 or Windows 11 (x64). No `.NET Framework` runtime is necessary.
+- Windows 10 or Windows 11 (x64). No `.NET Framework` runtime or Visual C++ Redistributable is necessary (`lusrmgr.exe` links the MSVC CRT statically).
 - Standard users can inspect local accounts and principals in read-only mode.
 - Administrative elevation (or remote administrative credentials) is necessary to create, modify, rename, or delete accounts and groups.
+
+## Installation
+
+### Cargo (`crates.io`)
+
+```powershell
+cargo install account-management
+```
+
+### Scoop
+
+```powershell
+scoop bucket add aaron https://github.com/aaron-c-s-ramos/scoop-bucket
+scoop install aaron/account-management
+```
+
+### WinGet
+
+```powershell
+winget install aaron-c-s-ramos.AccountManagement
+```
+
+### Direct Download
+
+Download the standalone `lusrmgr.exe` binary directly from [GitHub Releases](https://github.com/aaron-c-s-ramos/AccountManagement/releases/latest).
 
 ## Usage
 
