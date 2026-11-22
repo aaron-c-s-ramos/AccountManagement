@@ -22,6 +22,26 @@ pub use dialogs::ActiveDialog;
 /// Global typography scale factor applied to all egui text styles.
 pub const FONT_SCALE: f32 = 1.5_f32;
 
+/// Embedded 256x256 RGBA application icon PNG.
+const APP_ICON_PNG: &[u8] = include_bytes!("../../assets/icon.png");
+
+/// Decodes the embedded application icon PNG into RGBA8 pixels and dimensions.
+pub(crate) fn load_app_icon_rgba() -> Option<(Vec<u8>, u32, u32)> {
+    let img = image::load_from_memory(APP_ICON_PNG).ok()?.to_rgba8();
+    let (w, h) = img.dimensions();
+    Some((img.into_raw(), w, h))
+}
+
+/// Builds eframe `IconData` from the embedded PNG for the native window titlebar and taskbar.
+fn load_viewport_icon() -> Option<egui::IconData> {
+    let (rgba, width, height) = load_app_icon_rgba()?;
+    Some(egui::IconData {
+        rgba,
+        width,
+        height,
+    })
+}
+
 /// Selects which category is active for the chosen computer in the left tree.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ViewKind {
@@ -205,6 +225,8 @@ pub struct AccountManagerApp {
     pub(crate) dialog: Option<ActiveDialog>,
     /// Status message displayed at the bottom bar.
     pub(crate) notice: Option<StatusNotice>,
+    /// Cached texture handle for the custom application icon shown in the About dialog.
+    pub(crate) about_icon_texture: Option<egui::TextureHandle>,
     /// Tracks whether typography and visuals were initialized.
     style_initialized: bool,
 }
@@ -242,6 +264,7 @@ impl AccountManagerApp {
             selected_items: BTreeSet::new(),
             dialog: None,
             notice: None,
+            about_icon_texture: None,
             style_initialized: false,
         };
 
@@ -253,6 +276,25 @@ impl AccountManagerApp {
             );
         }
         app
+    }
+
+    /// Lazily loads and returns the application icon texture for the About dialog.
+    pub(crate) fn ensure_about_icon_texture(
+        &mut self,
+        ctx: &egui::Context,
+    ) -> Option<egui::TextureId> {
+        if self.about_icon_texture.is_none() {
+            if let Some((rgba, w, h)) = load_app_icon_rgba() {
+                let image =
+                    egui::ColorImage::from_rgba_unmultiplied([w as usize, h as usize], &rgba);
+                let handle =
+                    ctx.load_texture("lusrmgr_about_icon", image, egui::TextureOptions::LINEAR);
+                self.about_icon_texture = Some(handle);
+            }
+        }
+        self.about_icon_texture
+            .as_ref()
+            .map(egui::TextureHandle::id)
     }
 
     /// Sets the bottom status notice message.
@@ -1802,11 +1844,17 @@ pub fn draw_member_icon_inline(ui: &mut Ui, member: &GroupMember, palette: Palet
 
 /// Starts the eframe native desktop window for Local User and Group Management.
 pub fn run_gui() -> Result<(), String> {
+    let mut viewport = egui::ViewportBuilder::default()
+        .with_title("Local User and Group Management")
+        .with_inner_size([1180.0_f32, 740.0_f32])
+        .with_min_inner_size([860.0_f32, 560.0_f32]);
+
+    if let Some(icon) = load_viewport_icon() {
+        viewport = viewport.with_icon(icon);
+    }
+
     let native_options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default()
-            .with_title("Local User and Group Management")
-            .with_inner_size([1180.0_f32, 740.0_f32])
-            .with_min_inner_size([860.0_f32, 560.0_f32]),
+        viewport,
         ..Default::default()
     };
 
@@ -1825,6 +1873,16 @@ mod tests {
     #[test]
     fn typography_scale_is_one_point_five_x() {
         assert!((FONT_SCALE - 1.5_f32).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn embedded_icon_decodes_with_transparent_corners() {
+        let (rgba, w, h) = load_app_icon_rgba().expect("embedded icon PNG must decode");
+        assert_eq!((w, h), (256, 256));
+        assert_eq!(rgba.len(), 256 * 256 * 4);
+        assert_eq!(rgba[3], 0, "top-left corner must be transparent");
+        let last_alpha = rgba[rgba.len() - 1];
+        assert_eq!(last_alpha, 0, "bottom-right corner must be transparent");
     }
 
     #[test]

@@ -1868,20 +1868,34 @@ impl AccountManagerApp {
             }
 
             ActiveDialog::About => {
+                let icon_tex = self.ensure_about_icon_texture(ctx);
                 egui::Window::new("About Local User and Group Management")
                     .collapsible(false)
                     .resizable(false)
-                    .default_width(500.0_f32)
+                    .default_width(540.0_f32)
                     .anchor(egui::Align2::CENTER_CENTER, Vec2::ZERO)
                     .show(ctx, |ui| {
-                        ui.label(
-                            RichText::new(format!(
-                                "Local User and Group Management (lusrmgr) v{APP_VERSION}"
-                            ))
-                            .heading()
-                            .strong(),
-                        );
-                        ui.add_space(6.0_f32);
+                        ui.horizontal(|ui| {
+                            if let Some(tex_id) = icon_tex {
+                                ui.image(egui::load::SizedTexture::new(
+                                    tex_id,
+                                    Vec2::new(64.0_f32, 64.0_f32),
+                                ));
+                                ui.add_space(6.0_f32);
+                            }
+                            ui.vertical(|ui| {
+                                ui.label(
+                                    RichText::new("Local User and Group Management")
+                                        .heading()
+                                        .strong(),
+                                );
+                                ui.label(
+                                    RichText::new(format!("lusrmgr v{APP_VERSION} (GPL-3.0-only)"))
+                                        .color(palette.text_muted),
+                                );
+                            });
+                        });
+                        ui.add_space(8.0_f32);
                         ui.label("Native Rust alternative to the Windows lusrmgr.msc snap-in for all Windows editions, built on Win32 NetAPI32, LSA, WNet, and eframe/egui.");
                         ui.add_space(6.0_f32);
                         ui.label("License: GNU General Public License v3.0 (GPL-3.0-only)");
