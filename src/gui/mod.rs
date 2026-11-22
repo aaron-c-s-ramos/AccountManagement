@@ -1104,21 +1104,28 @@ impl AccountManagerApp {
                     .fill(palette.bg_surface)
                     .inner_margin(Margin::symmetric(10, 6))
                     .show(ui, |ui| {
+                        ui.set_min_width(ui.available_width());
                         ui.horizontal(|ui| {
-                            self.sort_header(ui, "Name", SortColumn::Name, name_w);
-                            self.sort_header(ui, "Full Name", SortColumn::Secondary, full_w);
-                            self.sort_header(ui, "Status", SortColumn::Status, status_w);
+                            self.sort_header(ui, "Name", SortColumn::Name, name_w, palette);
+                            self.sort_header(
+                                ui,
+                                "Full Name",
+                                SortColumn::Secondary,
+                                full_w,
+                                palette,
+                            );
+                            self.sort_header(ui, "Status", SortColumn::Status, status_w, palette);
                             if show_sid {
-                                ui.add_sized(
-                                    [sid_w, 22.0_f32],
-                                    egui::Label::new(RichText::new("SID").strong()),
-                                );
+                                fixed_cell(ui, sid_w, 24.0_f32, |ui| {
+                                    ui.label(RichText::new("SID").strong());
+                                });
                             }
                             self.sort_header(
                                 ui,
                                 "Description",
                                 SortColumn::Detail,
                                 ui.available_width().max(120.0_f32),
+                                palette,
                             );
                         });
                     });
@@ -1153,76 +1160,56 @@ impl AccountManagerApp {
                                 .show(ui, |ui| {
                                     ui.set_min_width(ui.available_width());
                                     ui.horizontal(|ui| {
-                                        ui.allocate_ui_with_layout(
-                                            Vec2::new(name_w, 24.0_f32),
-                                            Layout::left_to_right(Align::Center),
-                                            |ui| {
-                                                draw_user_icon_inline(
-                                                    ui,
-                                                    user.is_disabled(),
-                                                    palette,
-                                                );
-                                                let name_color = if user.is_disabled() {
-                                                    palette.text_muted
-                                                } else {
-                                                    palette.text_primary
-                                                };
+                                        fixed_cell(ui, name_w, 24.0_f32, |ui| {
+                                            draw_user_icon_inline(ui, user.is_disabled(), palette);
+                                            let name_color = if user.is_disabled() {
+                                                palette.text_muted
+                                            } else {
+                                                palette.text_primary
+                                            };
+                                            ui.add(
+                                                egui::Label::new(
+                                                    RichText::new(&user.name).color(name_color),
+                                                )
+                                                .truncate()
+                                                .selectable(false),
+                                            );
+                                        });
+
+                                        fixed_cell(ui, full_w, 24.0_f32, |ui| {
+                                            ui.add(
+                                                egui::Label::new(&user.full_name)
+                                                    .truncate()
+                                                    .selectable(false),
+                                            );
+                                        });
+
+                                        fixed_cell(ui, status_w, 24.0_f32, |ui| {
+                                            let status_color = if user.is_disabled() {
+                                                palette.danger
+                                            } else if user.is_locked_out() {
+                                                palette.warning
+                                            } else {
+                                                palette.success
+                                            };
+                                            ui.label(
+                                                RichText::new(user.status_label())
+                                                    .color(status_color),
+                                            );
+                                        });
+
+                                        if show_sid {
+                                            fixed_cell(ui, sid_w, 24.0_f32, |ui| {
                                                 ui.add(
                                                     egui::Label::new(
-                                                        RichText::new(&user.name).color(name_color),
+                                                        RichText::new(&user.sid)
+                                                            .small()
+                                                            .color(palette.text_muted),
                                                     )
                                                     .truncate()
                                                     .selectable(false),
                                                 );
-                                            },
-                                        );
-
-                                        ui.allocate_ui_with_layout(
-                                            Vec2::new(full_w, 24.0_f32),
-                                            Layout::left_to_right(Align::Center),
-                                            |ui| {
-                                                ui.add(
-                                                    egui::Label::new(&user.full_name)
-                                                        .truncate()
-                                                        .selectable(false),
-                                                );
-                                            },
-                                        );
-
-                                        ui.allocate_ui_with_layout(
-                                            Vec2::new(status_w, 24.0_f32),
-                                            Layout::left_to_right(Align::Center),
-                                            |ui| {
-                                                let status_color = if user.is_disabled() {
-                                                    palette.danger
-                                                } else if user.is_locked_out() {
-                                                    palette.warning
-                                                } else {
-                                                    palette.success
-                                                };
-                                                ui.label(
-                                                    RichText::new(user.status_label())
-                                                        .color(status_color),
-                                                );
-                                            },
-                                        );
-
-                                        if show_sid {
-                                            ui.allocate_ui_with_layout(
-                                                Vec2::new(sid_w, 24.0_f32),
-                                                Layout::left_to_right(Align::Center),
-                                                |ui| {
-                                                    ui.add(
-                                                        egui::Label::new(
-                                                            RichText::new(&user.sid)
-                                                                .small()
-                                                                .color(palette.text_muted),
-                                                        )
-                                                        .truncate()
-                                                        .selectable(false),
-                                                    );
-                                                },
-                                            );
+                                            });
                                         }
 
                                         ui.add(
@@ -1393,13 +1380,15 @@ impl AccountManagerApp {
                     .fill(palette.bg_surface)
                     .inner_margin(Margin::symmetric(10, 6))
                     .show(ui, |ui| {
+                        ui.set_min_width(ui.available_width());
                         ui.horizontal(|ui| {
-                            self.sort_header(ui, "Group Name", SortColumn::Name, name_w);
+                            self.sort_header(ui, "Group Name", SortColumn::Name, name_w, palette);
                             self.sort_header(
                                 ui,
                                 "Description",
                                 SortColumn::Detail,
                                 ui.available_width().max(160.0_f32),
+                                palette,
                             );
                         });
                     });
@@ -1434,18 +1423,14 @@ impl AccountManagerApp {
                                 .show(ui, |ui| {
                                     ui.set_min_width(ui.available_width());
                                     ui.horizontal(|ui| {
-                                        ui.allocate_ui_with_layout(
-                                            Vec2::new(name_w, 24.0_f32),
-                                            Layout::left_to_right(Align::Center),
-                                            |ui| {
-                                                draw_group_icon_inline(ui, palette);
-                                                ui.add(
-                                                    egui::Label::new(&group.name)
-                                                        .truncate()
-                                                        .selectable(false),
-                                                );
-                                            },
-                                        );
+                                        fixed_cell(ui, name_w, 24.0_f32, |ui| {
+                                            draw_group_icon_inline(ui, palette);
+                                            ui.add(
+                                                egui::Label::new(&group.name)
+                                                    .truncate()
+                                                    .selectable(false),
+                                            );
+                                        });
                                         ui.add(
                                             egui::Label::new(
                                                 RichText::new(&group.comment)
@@ -1554,14 +1539,28 @@ impl AccountManagerApp {
                     .fill(palette.bg_surface)
                     .inner_margin(Margin::symmetric(10, 6))
                     .show(ui, |ui| {
+                        ui.set_min_width(ui.available_width());
                         ui.horizontal(|ui| {
-                            self.sort_header(ui, "Principal Name", SortColumn::Name, name_w);
-                            self.sort_header(ui, "Authority", SortColumn::Secondary, domain_w);
+                            self.sort_header(
+                                ui,
+                                "Principal Name",
+                                SortColumn::Name,
+                                name_w,
+                                palette,
+                            );
+                            self.sort_header(
+                                ui,
+                                "Authority",
+                                SortColumn::Secondary,
+                                domain_w,
+                                palette,
+                            );
                             self.sort_header(
                                 ui,
                                 "SID",
                                 SortColumn::Detail,
                                 ui.available_width().max(180.0_f32),
+                                palette,
                             );
                         });
                     });
@@ -1585,32 +1584,24 @@ impl AccountManagerApp {
                                 .show(ui, |ui| {
                                     ui.set_min_width(ui.available_width());
                                     ui.horizontal(|ui| {
-                                        ui.allocate_ui_with_layout(
-                                            Vec2::new(name_w, 24.0_f32),
-                                            Layout::left_to_right(Align::Center),
-                                            |ui| {
-                                                draw_builtin_icon_inline(ui, palette);
-                                                ui.add(
-                                                    egui::Label::new(&item.name)
-                                                        .truncate()
-                                                        .selectable(false),
-                                                );
-                                            },
-                                        );
-                                        ui.allocate_ui_with_layout(
-                                            Vec2::new(domain_w, 24.0_f32),
-                                            Layout::left_to_right(Align::Center),
-                                            |ui| {
-                                                ui.add(
-                                                    egui::Label::new(
-                                                        RichText::new(&item.domain)
-                                                            .color(palette.text_muted),
-                                                    )
+                                        fixed_cell(ui, name_w, 24.0_f32, |ui| {
+                                            draw_builtin_icon_inline(ui, palette);
+                                            ui.add(
+                                                egui::Label::new(&item.name)
                                                     .truncate()
                                                     .selectable(false),
-                                                );
-                                            },
-                                        );
+                                            );
+                                        });
+                                        fixed_cell(ui, domain_w, 24.0_f32, |ui| {
+                                            ui.add(
+                                                egui::Label::new(
+                                                    RichText::new(&item.domain)
+                                                        .color(palette.text_muted),
+                                                )
+                                                .truncate()
+                                                .selectable(false),
+                                            );
+                                        });
                                         ui.add(
                                             egui::Label::new(&item.sid)
                                                 .truncate()
@@ -1653,33 +1644,67 @@ impl AccountManagerApp {
         }
     }
 
-    /// Renders a clickable sortable column header button.
-    fn sort_header(&mut self, ui: &mut Ui, label: &str, col: SortColumn, width: f32) {
-        let arrow = if self.sort_column == col {
-            if self.sort_ascending {
-                " ▲"
-            } else {
-                " ▼"
+    /// Renders a clickable sortable column header with a custom vector sort triangle.
+    fn sort_header(
+        &mut self,
+        ui: &mut Ui,
+        label: &str,
+        col: SortColumn,
+        width: f32,
+        palette: Palette,
+    ) {
+        let is_active = self.sort_column == col;
+        let ascending = self.sort_ascending;
+        fixed_cell(ui, width, 24.0_f32, |ui| {
+            let clicked = ui
+                .selectable_label(false, RichText::new(label).strong())
+                .clicked();
+            if is_active {
+                let (tri_rect, _) =
+                    ui.allocate_exact_size(Vec2::new(10.0_f32, 10.0_f32), Sense::hover());
+                let c = tri_rect.center();
+                let pts = if ascending {
+                    vec![
+                        Pos2::new(c.x, c.y - 3.0_f32),
+                        Pos2::new(c.x + 4.0_f32, c.y + 3.0_f32),
+                        Pos2::new(c.x - 4.0_f32, c.y + 3.0_f32),
+                    ]
+                } else {
+                    vec![
+                        Pos2::new(c.x - 4.0_f32, c.y - 3.0_f32),
+                        Pos2::new(c.x + 4.0_f32, c.y - 3.0_f32),
+                        Pos2::new(c.x, c.y + 3.0_f32),
+                    ]
+                };
+                ui.painter().add(egui::Shape::convex_polygon(
+                    pts,
+                    palette.accent,
+                    Stroke::NONE,
+                ));
             }
-        } else {
-            ""
-        };
-        let text = RichText::new(format!("{label}{arrow}")).strong();
-        ui.allocate_ui_with_layout(
-            Vec2::new(width, 22.0_f32),
-            Layout::left_to_right(Align::Center),
-            |ui| {
-                if ui.selectable_label(false, text).clicked() {
-                    if self.sort_column == col {
-                        self.sort_ascending = !self.sort_ascending;
-                    } else {
-                        self.sort_column = col;
-                        self.sort_ascending = true;
-                    }
+            if clicked {
+                if is_active {
+                    self.sort_ascending = !self.sort_ascending;
+                } else {
+                    self.sort_column = col;
+                    self.sort_ascending = true;
                 }
-            },
-        );
+            }
+        });
     }
+}
+
+/// Allocates a strict fixed-width horizontal table cell so headers and rows align cleanly.
+fn fixed_cell(ui: &mut Ui, width: f32, height: f32, add_contents: impl FnOnce(&mut Ui)) {
+    ui.allocate_ui_with_layout(
+        Vec2::new(width, height),
+        Layout::left_to_right(Align::Center),
+        |ui| {
+            ui.set_min_size(Vec2::new(width, height));
+            ui.set_max_width(width);
+            add_contents(ui);
+        },
+    );
 }
 
 impl Default for AccountManagerApp {

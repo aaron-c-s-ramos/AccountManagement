@@ -16,6 +16,28 @@ Version `2.0.0` replaces the legacy `.NET Framework` Visual Basic implementation
 - Switch between clean Dark Mode and Light Mode with `1.5x` scaled typography and persistent preferences.
 - Run read-only account, group, and built-in principal inspections from the command line with human-readable tables or `--json` output.
 
+## Screenshots
+
+### Users View (Dark Mode - Red Disabled-Account Badges)
+
+![Users View - Dark Mode](Screenshots/01_users_dark.png)
+
+### Users View (Light Mode)
+
+![Users View - Light Mode](Screenshots/02_users_light.png)
+
+### Local Security Groups
+
+![Groups View - Dark Mode](Screenshots/03_groups_dark.png)
+
+### Built-in Security Principals
+
+![Built-in Security Principals - Dark Mode](Screenshots/04_builtin_dark.png)
+
+### About Dialog
+
+![About Dialog - Dark Mode](Screenshots/05_about_dark.png)
+
 ## System Requirements
 
 - Windows 10 or Windows 11 (x64). No `.NET Framework` runtime is necessary.
